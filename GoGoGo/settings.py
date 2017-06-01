@@ -26,7 +26,7 @@ SECRET_KEY = '9)f&@qt%yn=1fjfs8*hnq7yso&!ii(__)temnkvbyofd2!d*5z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://gogogo-1996.herokuapp.com', 'http://localhost:8000']
 
 
 # Application definition
@@ -86,10 +86,11 @@ WSGI_APPLICATION = 'GoGoGo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'GoGoGo',
-        'USER': 'leminhson',
-        'PASSWORD': 'cuoilenbanoi123',
-        'HOST': 'localhost',
+        'NAME': 'd1089j55a8jqtb',
+        'USER': 'bkmffojipoalsi',
+        'PASSWORD': '7017c305a187a68878b88851f434ecfdfd6d63fa107734298198605aecec27db',
+        'HOST': 'ec2-50-19-218-160.compute-1.amazonaws.com',
+        'PORT': '5432'
     }
 }
 
