@@ -1,0 +1,3863 @@
+swagger: "2.0"
+
+################################################################################
+#                              API Information                                 #
+################################################################################
+info:
+  title: HOLLER API FOR FRONT-END
+  description: |
+    The second version of the HOLLER API is an exciting step forward towards
+    making your app interacting better with your users in a standard of RESTful APIs
+  version: "2.0.0"
+
+################################################################################
+#                  Host, Base Path, Schemes and Content Types                  #
+################################################################################
+basePath: /api/v2
+consumes:
+  - application/json
+produces:
+  - application/json
+
+################################################################################
+#                                  Security                                    #
+################################################################################
+securityDefinitions:
+  AccessToken:
+    description: |
+      The following syntax must be used in the 'Authorization' header :
+        Token xxxxx
+    type: apiKey
+    name: Authorization
+    in: header
+security:
+  - AccessToken: []
+
+################################################################################
+#                                   Paths                                      #
+################################################################################
+paths:
+  /auth/registration/:
+    post:
+      tags:
+        - USER
+      summary: Register a new user
+      description: |
+        Register a new user.
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: User object
+          schema:
+            $ref: '#/definitions/UserRegistration'
+      responses:
+        '201':
+          description: Created user successfully
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /auth/registration/verify-email/:
+    post:
+      tags:
+        - USER
+      summary: Verify email of new user
+      description: |
+        Verify email of new user before login.
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: User object
+          schema:
+            type: object
+            required:
+              - key
+            properties:
+              key:
+                type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /auth/login/:
+    post:
+      tags:
+        - USER
+      summary: Login user
+      description: |
+        Log user into the system.
+      security: []
+      parameters:
+        - in: body
+          name: body
+          description: User credentials
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              key:
+                type: string
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /auth/logout/:
+    post:
+      tags:
+        - USER
+      summary: Logout user
+      description: |
+        Log out current logged in user session.
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              success:
+                type: string
+                example: Successfully logged out
+        '403':
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /auth/password/reset/:
+    post:
+      tags:
+        - USER
+      summary: Reset password of user
+      description: |
+        Reset password of user via email in case of forgetting password.
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: JSON Data
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              success:
+                type: string
+                example: Password reset e-mail has been sent.
+        '403':
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /auth/password/reset/confirm/:
+    post:
+      tags:
+        - USER
+      summary: Confirm reset password of user
+      description: |
+        Confirm reset password of user.
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: JSON Data
+          schema:
+            type: object
+            required:
+              - uid
+              - token
+              - new_password1
+              - new_password2
+            properties:
+              uid:
+                type: string
+              token:
+                type: string
+              new_password1:
+                type: string
+              new_password2:
+                type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              success:
+                type: string
+                example: Password has been reset with the new password.
+        '403':
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /auth/password/change/:
+    post:
+      tags:
+        - USER
+      summary: Change password of user
+      description: |
+        Change password of user.
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: body
+          name: body
+          required: true
+          description: JSON Data
+          schema:
+            type: object
+            required:
+              - old_password
+              - new_password1
+              - new_password2
+            properties:
+              old_password:
+                type: string
+              new_password1:
+                type: string
+              new_password2:
+                type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              success:
+                type: string
+                example: New password has been saved.
+        '403':
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /auth/user/:
+    get:
+      tags:
+        - USER
+      summary: Get user profile
+      description: |
+        Get logged in user information.
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/User"
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    put:
+      tags:
+        - USER
+      summary: Update user profile
+      description: |
+        Update logged in user information.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: body
+          name: data
+          description: JSON string
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+            properties:
+              username:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+              profile:
+                type: object
+                properties:
+                  company:
+                    type: string
+                  job_role:
+                    type: string
+                  phone:
+                    type: string
+                  country:
+                    type: string
+                  sign_up_newsletter:
+                    type: boolean
+                  current_organisation:
+                    type: integer
+                    example: 1
+                  referrer:
+                    type: string
+        - in: formData
+          name: logo_img
+          description: User avatar image
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/User"
+        '400':
+          description: Data syntax error
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /account/plans/:
+    get:
+      tags:
+        - PRICING PLAN
+      summary: Get all pricing plans
+      description: |
+        Get all pricing plans.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/PlanList"
+
+  /account/plan/:
+    get:
+      tags:
+        - PRICING PLAN
+      summary: Get current plan of application
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: query
+          name: application_id
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/CurrentPlan"
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    put:
+      tags:
+        - PRICING PLAN
+      summary: Update current plan of application
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: query
+          name: application_id
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: body
+          name: body
+          description: JSON data
+          required: true
+          schema:
+            type: object
+            properties:
+              plan:
+                type: integer
+              subscription:
+                type: string
+                example: none/monthly/annual
+              is_cancelled:
+                type: boolean
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Update plan successfully
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /account/billing/:
+    get:
+      tags:
+        - PRICING PLAN
+      summary: Get billing information
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/BillingInfo"
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    put:
+      tags:
+        - PRICING PLAN
+      summary: Update billing information
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: body
+          name: body
+          description: JSON data
+          required: true
+          schema:
+            $ref: "#/definitions/BillingUpdate"
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Update billing information successfully
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /account/invoices/:
+    get:
+      tags:
+        - PRICING PLAN
+      summary: Get all invoices
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: query
+          name: application_id
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/InvoiceList"
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /apps/:
+    post:
+      tags:
+        - APPLICATION
+      summary: Create a new application
+      description: |
+        Create a new application.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: body
+          name: body
+          description: Application information
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/AppDetail'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    get:
+      tags:
+        - APPLICATION
+      summary: Get list of applications
+      description: |
+        Get all applications of user.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+      responses:
+        '200':
+          description: A list of applications
+          schema:
+            $ref: '#/definitions/AppList'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /apps/{id}/:
+    get:
+      tags:
+        - APPLICATION
+      summary: Get an application detail
+      description: |
+        Get application detail.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - name: id
+          in: path
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: Detail of application
+          schema:
+            $ref: '#/definitions/AppDetail'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Application not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - APPLICATION
+      summary: Update an application information
+      description: |
+        Update an application information.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: path
+          name: id
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: body
+          name: data
+          description: JSON string
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              apns_p12_password:
+                type: string
+              apns_env:
+                type: string
+                enum:
+                  - sandbox
+                  - production
+              gcm_apikey:
+                type: string
+              timezone:
+                type: string
+              receive_report:
+                type: boolean
+        - in: formData
+          name: cert_file
+          description: Apple push certificate file (.p12)
+          required: false
+          type: file
+        - in: formData
+          name: logo_img
+          description: Application icon (jpeg, png, ...)
+          required: false
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/AppDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Application not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validation Failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - APPLICATION
+      summary: Delete an application
+      description: |
+        Delete an application.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: Token
+        - in: path
+          name: id
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '204':
+          description: OK
+        '404':
+          description: Application not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /subscribers/:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get all subscribers of an application
+      description: |
+        Get all subscribers of an application or find by username, email
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: query
+          name: username
+          description: Subscriber's username
+          type: string
+          default: ""
+        - in: query
+          name: email
+          description: Subscriber's email
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: A list of subscribers
+          schema:
+            $ref: '#/definitions/SubscriberList'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/import:
+    post:
+      tags:
+        - SUBSCRIBER
+      summary: Import subscribers from csv file
+      description: |
+        Import subscribers from csv file
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: formData
+          name: file
+          description: CSV file contains subscribers' information
+          required: true
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Import'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/recent_imports/:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get recent 5 uploaded files
+      description: |
+        Get recent 5 uploaded files
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UploadedFile'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/export:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Export all subscribers of an application into a file
+      description: |
+        Export all subscribers of an application into a file
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/count:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get number of subscribers by filters
+      description: |
+        Get number of subscribers by filters.
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: query
+          name: gender
+          description: "'male' or 'female'"
+          type: string
+          default: ""
+        - in: query
+          name: country
+          description: Country code of 2-character (VN, US, SG, ...)
+          type: string
+          default: ""
+        - in: query
+          name: minage
+          type: integer
+          default: 1
+        - in: query
+          name: maxage
+          type: integer
+          default: 10
+        - in: query
+          name: location
+          description: Location ID
+          type: integer
+          default: 1
+        - in: query
+          name: channel
+          description: "'notification', 'sms', or 'email'"
+          type: string
+          default: ""
+        - in: query
+          name: device
+          description: "'ios' or 'android'"
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/attributes/:
+    post:
+      tags:
+        - SUBSCRIBER
+      summary: Create a new custom attribute
+      description: |
+        Create a new custom attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Custom Attribute object
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - codename
+              - data_type
+            properties:
+              name:
+                type: string
+                example: string
+              code_name:
+                type: string
+                example: string
+              data_type:
+                type: string
+                example: string/number/bool
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/CustomAttribute'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get all custom attribute
+      description: |
+        Get all custom attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CustomAttribute'
+        '403':
+          description: AuthenticationError
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/attributes/{id}/:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get the detail of a custom attribute
+      description: |
+        Get the detail of a custom attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Custom attribute ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CustomAttribute'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Custom attribute not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - SUBSCRIBER
+      summary: Update custom attribute
+      description: |
+        Update custom attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          description: Custom attribute ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          required: true
+          description: Custom attribute object
+          schema:
+            type: object
+            required:
+              - name
+              - data_type
+              - code_name
+            properties:
+              name:
+                type: string
+                example: string
+              code_name:
+                type: string
+                example: string
+              data_type:
+                type: string
+                example: string/number/bool
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CustomAttribute'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Segment not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - SUBSCRIBER
+      summary: Delete a custom attribute
+      description: |
+        Delete a custom attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Custom attribute ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Custom attribute not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /subscribers/attributes/{id}/confirm/:
+    post:
+      tags:
+        - SUBSCRIBER
+      summary: Confirm new attribute
+      description: |
+        Confirm new attribute
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+        '404':
+          description: Attribute not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Invalid attribute id
+
+  /subscribers/events/:
+    post:
+      tags:
+        - SUBSCRIBER
+      summary: Create a new custom event
+      description: |
+        Create a new custom event
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Custom Event object
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - description
+            properties:
+              name:
+                type: string
+                example: string
+              description:
+                type: string
+                example: string
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/CustomEvent'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get all custom event
+      description: |
+        Get all custom events
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/CustomEvent'
+        '403':
+          description: AuthenticationError
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /subscribers/events/{id}/:
+    get:
+      tags:
+        - SUBSCRIBER
+      summary: Get the detail of a custom EVENT
+      description: |
+        Get the detail of a custom event
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Custom event ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CustomEvent'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Custom attribute not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - SUBSCRIBER
+      summary: Update custom event
+      description: |
+        Update custom event
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          description: Custom event ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          required: true
+          description: Custom event object
+          schema:
+            type: object
+            required:
+              - name
+              - description
+            properties:
+              name:
+                type: string
+                example: string
+              description:
+                type: string
+                example: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CustomEvent'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Segment not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - SUBSCRIBER
+      summary: Delete a custom event
+      description: |
+        Delete a custom event
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Custom event ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Custom event not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /subscribers/events/{id}/confirm/:
+    post:
+      tags:
+        - SUBSCRIBER
+      summary: Confirm new event
+      description: |
+        Confirm new event
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+        '404':
+          description: Event not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Invalid event id
+
+  /campaigns/:
+    get:
+      tags:
+        - CAMPAIGN
+      summary: Get the list of campaigns
+      description: |
+        Get the list of campaigns of an application.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: query
+          name: search
+          description: Search string in campaign name
+          type: string
+          default: ""
+        - in: query
+          name: active
+          description: Campaign active status (0 - sent, 1 - scheduled)
+          type: string
+          default: ""
+        - in: query
+          name: sort
+          description: "Field to sort ('field': ascending, '-field': descending)"
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: A list of campaigns
+          schema:
+            $ref: '#/definitions/CampaignList'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      tags:
+        - CAMPAIGN
+      summary: Create a campaign
+      description: |
+        A campaign is a communication of push notification, SMS or email.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Campaign object
+          required: true
+          schema:
+            $ref: '#/definitions/CampaignData'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/CampaignDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Insufficient privilege to create campaign
+          schema:
+            $ref: '#/definitions/Error'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /campaigns/{id}/:
+    get:
+      tags:
+        - CAMPAIGN
+      summary: Get the detail of a campaign
+      description: |
+        Get the detail of a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Campaign object
+          schema:
+            $ref: '#/definitions/CampaignDetail'
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - CAMPAIGN
+      summary: Update a campaign
+      description: |
+        Update a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          description: Campaign object
+          required: true
+          schema:
+            $ref: '#/definitions/CampaignData'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CampaignDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Insufficient privilege to create campaign
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      tags:
+        - CAMPAIGN
+      summary: Delete a campaign
+      description: |
+        Delete a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Delete successfully
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /canvas/:
+    get:
+      tags:
+        - CANVAS
+      summary: Get the list of canvases
+      description: |
+        Get the list of canvases of an application.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CanvasList'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    post:
+      tags:
+        - CANVAS
+      summary: Create a canvas
+      description: |
+        A canvas is the collection of independent scenarios which trigger
+        an action like send notifications, sms or emails based on mobile user's behavior
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Canvas object
+          required: true
+          schema:
+            $ref: '#/definitions/CanvasData'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/CanvasDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Insufficient privilege to create canvas
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /canvas/{id}/:
+    get:
+      tags:
+        - CANVAS
+      summary: Get the detail of a canvas
+      description: |
+        Get the detail of a canvas.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Canvas ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CanvasDetail'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Canvas not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - CANVAS
+      summary: Update a canvas
+      description: |
+        Update a canvas.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Canvas ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          description: Canvas object
+          required: true
+          schema:
+            $ref: '#/definitions/CanvasData'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/CanvasDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Insufficient privilege to create canvas
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Canvas not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - CANVAS
+      summary: Delete a canvas
+      description: |
+        Delete a canvas.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Canvas ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Delete successfully
+        '404':
+          description: Canvas not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /paths/:
+    get:
+      tags:
+        - CANVAS
+      summary: Get the list of paths
+      description: |
+        Get the list of paths of an application.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: A list of paths
+          schema:
+            $ref: '#/definitions/PathList'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    post:
+      tags:
+        - CANVAS
+      summary: Create a path
+      description: |
+        Path is a chain of events known as individual behavior of subscriber
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Path object
+          required: true
+          schema:
+            $ref: '#/definitions/PathData'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/PathDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /paths/{id}/:
+    get:
+      tags:
+        - CANVAS
+      summary: Get the detail of a path
+      description: |
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Path ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Path object
+          schema:
+            $ref: '#/definitions/PathDetail'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Path not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - CANVAS
+      summary: Update a path
+      description: |
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Path ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          description: Path object
+          required: true
+          schema:
+            $ref: '#/definitions/PathData'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PathDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Insufficient privilege to create path
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Path not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - CANVAS
+      summary: Delete a path
+      description: |
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Path ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Delete successfully
+        '404':
+          description: Path not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /communications/create/:
+    post:
+      tags:
+        - CAMPAIGN
+      summary: Create a campaign
+      description: |
+        A campaign is a communication of push notification, SMS or email.
+        Creating campaign also allows to set a cover image.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: data
+          description: |
+            JSON data to create campaign.
+            Require **name**, **channel**, **time**
+            ```
+            {
+              "name": "",
+              "description": ""
+              "channel": {
+                "type": "pushnotif/sms/email",
+                "content": {
+                  // the content depending on channel type
+                  // if channel type is "pushnotif"
+                  "subject": "",
+                  "content": "",
+                  "deep_link": ""
+
+                  // if channel type is "sms"
+                  "from": "",
+                  "content": ""
+
+                  // if channel type is "email"
+                  "subject": "",
+                  "from": "",
+                  "content": ""
+                }
+              },
+              "target": {
+                "segment": {
+                  "device": "",
+                  "country": "",
+                  "gender": "",
+                  "age": {
+                    "from": 5,
+                    "to": 10
+                  },
+                  "date_of_register": {
+                    "from": date-time,
+                    "to": date-time
+                  },
+                  "location": ""
+                }
+              },
+              "time": {
+                "now": true/false,
+                "subscriber_event": "register/open/login/referral",
+                "date": date-time,
+                "repeat_daily": true/false,
+                "repeat_weekly": true/false,
+                "repeat_monthly": true/false
+              }
+            }
+            ```
+          required: true
+          type: string
+          default: ""
+        - in: formData
+          name: cover_image
+          description: Cover image of campaign
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              communication_id:
+                type: integer
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Insufficient privilege to create campaign
+          schema:
+            $ref: '#/definitions/Error'
+
+  /communications/:
+    get:
+      tags:
+        - CAMPAIGN
+      summary: Get the list of campaigns
+      description: |
+        Get the list of campaigns of an application.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: query
+          name: search
+          description: Search string in communication's name or description
+          type: string
+          default: ""
+        - in: query
+          name: status
+          description: Communication reached status
+          type: string
+          default: ""
+        - in: query
+          name: is_active
+          description: Communication active status (0 - sent, 1 - scheduled)
+          type: string
+          default: ""
+        - in: query
+          name: sort
+          description: "Field of result to sort ('field': ascending, '-field': descending)"
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: A list of campaigns
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Campaign'
+        '403':
+          description: Authentication error
+          schema:
+            $ref: '#/definitions/Error'
+
+  '/communications/{id}/':
+    get:
+      tags:
+        - CAMPAIGN
+      summary: Get the detail of a campaign
+      description: |
+        Get the detail of a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Campaign object
+          schema:
+            $ref: '#/definitions/CommunicationsDetail'
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - CAMPAIGN
+      summary: Update a campaign
+      description: |
+        Update a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+        - in: formData
+          name: data
+          description: |
+            JSON data to create campaign.
+            Require **name**, **channel**, **time**
+            ```
+            {
+              "name": "",
+              "description": ""
+              "channel": {
+                "type": "pushnotif/sms/email",
+                "content": {
+                  // the content depending on channel type
+                  // if channel type is "pushnotif"
+                  "subject": "",
+                  "content": "",
+                  "deep_link": ""
+
+                  // if channel type is "sms"
+                  "from": "",
+                  "content": ""
+
+                  // if channel type is "email"
+                  "subject": "",
+                  "from": "",
+                  "content": ""
+                }
+              },
+              "target": {
+                "segment": {
+                  "device": "",
+                  "country": "",
+                  "gender": "",
+                  "age": {
+                    "from": 5,
+                    "to": 10
+                  },
+                  "date_of_register": {
+                    "from": date-time,
+                    "to": date-time
+                  },
+                  "location": ""
+                }
+              },
+              "time": {
+                "now": true/false,
+                "subscriber_event": "register/open/login/referral",
+                "date": date-time,
+                "repeat_daily": true/false,
+                "repeat_weekly": true/false,
+                "repeat_monthly": true/false
+              }
+            }
+            ```
+          required: true
+          type: string
+          default: ""
+        - in: formData
+          name: cover_img
+          description: Cover image of campaign
+          type: file
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              communication_id:
+                type: integer
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/Error'
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+    delete:
+      tags:
+        - CAMPAIGN
+      summary: Delete a campaign
+      description: |
+        Delete a campaign.
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Campaign ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Delete successfully
+        '404':
+          description: Campaign not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /target/:
+    get:
+      tags:
+        - TARGET
+      summary: Get all targets
+      description: |
+        Get all targets available in application:
+        device, country, gender.
+      security: []
+      parameters:
+        - in: query
+          name: content_type
+          description: |
+            Filter by these types:
+            device, country, gender
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/TargetList'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /locations/:
+    get:
+      tags:
+        - LOCATION
+      summary: Get all locations
+      description: |
+        Get all locations in application
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LocationList'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+    post:
+      tags:
+        - LOCATION
+      summary: Create a new location
+      description: |
+        Create a new location.
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: body
+          name: body
+          description: Location object
+          required: true
+          schema:
+            $ref: '#/definitions/LocationData'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LocationDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validation Failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+
+  /locations/{id}/:
+    get:
+      tags:
+        - LOCATION
+      summary: Get detail of a location
+      description: |
+        Get detail of a location.
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Location ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LocationDetail'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Location not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - LOCATION
+      summary: Update a location
+      description: |
+        Update a location.
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Location ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          description: Location object
+          required: true
+          schema:
+            $ref: '#/definitions/LocationData'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LocationDetail'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/Error'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Location not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - LOCATION
+      summary: Delete a location
+      description: |
+        Delete a location
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Location ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: OK
+        '404':
+          description: Location not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+
+  /insight/time_spent:
+    get:
+      tags:
+        - ANALYTIC
+      summary: Get insight about usage of subscriber by metric and time
+      description: |
+        Get insight about usage of subscriber by metric and time.
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+        - in: query
+          name: type
+          description: 'Statistic metrics (dau, mau, stickiness, new_users, daily_sessions, daily_sessions_per_mau)'
+          required: true
+          type: string
+          default: ""
+        - in: query
+          name: trend
+          description: 'Show trend in result or not (0, 1)'
+          type: integer
+          default: 1
+        - in: query
+          name: timeline
+          description: 'Type of timeline (d (day), m (month), q (quarter))'
+          type: string
+          default: ""
+        - in: query
+          name: from
+          description: Start date to filter (YYYY-MM-DD)
+          type: string
+          default: ""
+        - in: query
+          name: to
+          description: End date to filter (YYYY-MM-DD)
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+              trend:
+                type: object
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /insight/lifetime/:
+    get:
+      tags:
+        - ANALYTIC
+      summary: Get lifetime statistics of an application
+      description: |
+        Get lifetime statistics of an application
+      parameters:
+        - in: header
+          name: HOLLER-APP-ID
+          description: Application ID
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              total_users:
+                type: integer
+              total_sessions:
+                type: integer
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /segments/:
+    post:
+      tags:
+        - SMART SEGMENT
+      summary: Create a new smart segment
+      description: |
+        Create a new smart segment
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: body
+          name: body
+          description: Smart Segment object
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - data_type
+            properties:
+              name:
+                type: string
+                example: string
+              data_type:
+                type: string
+                example: string/number/bool
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/SmartSegment'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    get:
+      tags:
+        - SMART SEGMENT
+      summary: Get all smart segments
+      description: |
+        Get all smart segments
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/SmartSegment'
+        '403':
+          description: AuthenticationError
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /segments/{id}/:
+    get:
+      tags:
+        - SMART SEGMENT
+      summary: Get the detail of a smart segment
+      description: |
+        Get the detail of a smart segment
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Segment ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SmartSegment'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Segment not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - SMART SEGMENT
+      summary: Update smart segment
+      description: |
+        Update smart segment
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: path
+          name: id
+          description: Segment ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          required: true
+          description: Segment object
+          schema:
+            type: object
+            required:
+              - name
+              - data_type
+            properties:
+              name:
+                type: string
+                example: string
+              data_type:
+                type: string
+                example: string/number/bool
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SmartSegment'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Segment not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+    delete:
+      tags:
+        - SMART SEGMENT
+      summary: Delete a segment
+      description: |
+        Delete a segment
+
+        Require `HOLLER-ACCESS-KEY` and `HOLLER-APP-ID` in `Headers`.
+      parameters:
+        - in: path
+          name: id
+          description: Segment ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Segment not found
+          schema:
+            $ref: '#/definitions/SegmentNotFound'
+
+  /organisations/:
+    get:
+      tags:
+        - ORGANIZATION
+      summary: Get all user's organizations
+      description: |
+        Get all user's organizations
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Organization'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationFailed'
+
+  /organisations/{id}/:
+    get:
+      tags:
+        - ORGANIZATION
+      summary: Get the detail of an organization
+      description: |
+        Get the detail of an organization
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Organization ID
+          required: true
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Organization'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+    put:
+      tags:
+        - ORGANIZATION
+      summary: Update organization's name
+      description: |
+        Update organization's name
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Organization ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          required: true
+          description: Organization name
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                example: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Organization'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /organisations/members/:
+    get:
+      tags:
+        - ORGANIZATION
+      summary: Get all organization's members
+      description: |
+        Get all organization's member of user's current organization
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/UserOrganization'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /organisations/members/{id}/:
+    put:
+      tags:
+        - ORGANIZATION
+      summary: Update information of organization's user
+      description: |
+        Update information of organization's user
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+        - in: path
+          name: id
+          description: Organization ID
+          required: true
+          type: integer
+          default: 1
+        - in: body
+          name: body
+          required: true
+          description: Member's information
+          schema:
+            type: object
+            required:
+              - user
+              - is_active
+              - role
+            properties:
+              user:
+                type: integer
+                example: 1
+              is_active:
+                type: boolean
+              role:
+                type: integer
+                example: 1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UserOrganization'
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '404':
+          description: UserOrganization not found
+          schema:
+            $ref: '#/definitions/NotFoundError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /organisations/roles/:
+    get:
+      tags:
+        - ORGANIZATION
+      summary: Get all role of organization
+      description: |
+        Get all role of organization
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+              previous:
+                type: string
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Role'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+
+  /invitations/send-invite/:
+    post:
+      tags:
+        - INVITATION
+      summary: Send an email to invite another join user's organization
+      description: |
+        Send an email to invite another join user's organization
+      parameters:
+        - in: header
+          name: Authorization
+          description: Access token
+          required: true
+          type: string
+          default: ""
+        - in: body
+          name: body
+          description: Email of invitee
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+              - role
+            properties:
+              email:
+                type: string
+              role:
+                type: integer
+                example: 1
+      responses:
+        '201':
+          description: Created
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Send successfully
+        '400':
+          description: Processing error
+          schema:
+            $ref: '#/definitions/BadRequest'
+        '403':
+          description: Authentication Error
+          schema:
+            $ref: '#/definitions/AuthenticationError'
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+
+  /invitations/accept-invite/{key}/:
+    post:
+      tags:
+        - INVITATION
+      summary: Accept invitation
+      description: |
+        Accept invitation
+      security: []
+      parameters:
+       -  in: path
+          name: key
+          description: token of activation link
+          required: true
+          type: string
+          default: ""
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Processing error
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+        '422':
+          description: Validating data error
+          schema:
+            $ref: '#/definitions/ValidationFailed'
+################################################################################
+#                                 Definitions                                  #
+################################################################################
+definitions:
+  UserRegistration:
+    type: object
+    properties:
+      username:
+        type: string
+        description: >-
+          Application require email. Username can get the begining before '@' of
+          email.
+      email:
+        type: string
+        description: Email to login must be verify.
+      password:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      profile:
+        type: object
+        properties:
+          company:
+            type: string
+          job_role:
+            type: string
+          phone:
+            type: string
+          country:
+            type: string
+            description: Country ID from list Country
+          logo_img:
+            type: string
+            description: URL of user avatar
+          sign_up_newsletter:
+            type: boolean
+          referrer:
+            type: string
+  User:
+    type: object
+    properties:
+      username:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      profile:
+        type: object
+        properties:
+          company:
+            type: string
+          job_role:
+            type: string
+          phone:
+            type: string
+          country:
+            type: string
+          logo_img:
+            type: string
+          sign_up_newsletter:
+            type: boolean
+          current_organisation:
+            type: integer
+            example: 1
+          referrer:
+            type: string
+  AppDetail:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      application_id:
+        type: string
+      access_key_api:
+        type: string
+      apns_certificate:
+        type: object
+        properties:
+          filename:
+            type: string
+          bundle_id:
+            type: string
+          expiry_date:
+            type: string
+            format: date
+      apns_env:
+        type: string
+      gcm_apikey:
+        type: string
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      timezone:
+        type: string
+      logo_img:
+        type: string
+      receive_report:
+        type: boolean
+  AppList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/AppDetail'
+  Segment:
+    type: object
+    properties:
+      device:
+        type: string
+      country:
+        type: string
+      gender:
+        type: string
+      age:
+        type: object
+        properties:
+          from:
+            type: integer
+          to:
+            type: integer
+      date_of_register:
+        type: object
+        properties:
+          from:
+            type: string
+            format: date-time
+          to:
+            type: string
+            format: date-time
+      location:
+        type: string
+  CampaignData:
+    type: object
+    properties:
+      name:
+        type: string
+      channel:
+        type: string
+        example: notification/email/sms
+      target:
+        type: object
+      notification:
+        type: object
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
+      schedule:
+        type: object
+        properties:
+          schedule_type:
+            type: string
+            example: time/event
+          delivery_time:
+            type: string
+            format: date-time
+          repeat:
+            type: string
+            example: daily/weekly/monthly
+          event:
+            type: string
+            example: register/open/login/referral
+  CampaignDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      channel:
+        type: string
+      target:
+        type: object
+      active:
+        type: boolean
+      total_sent:
+        type: integer
+      success_sent:
+        type: integer
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      notification:
+        type: object
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
+      schedule:
+        type: object
+        properties:
+          schedule_type:
+            type: string
+            example: time/event
+          delivery_time:
+            type: string
+            format: date-time
+          repeat:
+            type: string
+            example: daily/weekly/monthly
+          event:
+            type: string
+            example: register/open/login/referral
+  CampaignList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/CampaignDetail'
+  CanvasData:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      active:
+        type: boolean
+      target:
+        type: object
+  CanvasDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      description:
+        type: string
+      active:
+        type: boolean
+      target:
+        type: object
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  CanvasList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/CanvasDetail'
+  EventData:
+    type: object
+    properties:
+      name:
+        type: string
+      delay_timing:
+        type: string
+      channel:
+        type: string
+        example: notification/email/sms
+      notification:
+        type: object
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
+  EventDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      delay_timing:
+        type: string
+      channel:
+        type: string
+        example: notification/email/sms
+      notification:
+        type: object
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
+      enter_count:
+        type: integer
+  PathData:
+    type: object
+    properties:
+      canvas:
+        type: integer
+      name:
+        type: string
+      events:
+        type: array
+        items:
+          $ref: '#/definitions/EventData'
+  PathDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      canvas:
+        type: integer
+      name:
+        type: string
+      events:
+        type: array
+        items:
+          $ref: '#/definitions/EventDetail'
+  PathList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/PathDetail'
+  Campaign:
+    type: object
+    properties:
+      id:
+        type: string
+      channel:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        description: >-
+          status = 1 or 2 or 3. status = 1: draft. status = 2: scheduled. status
+          = 3: sent
+      cover_image:
+        type: string
+      all_target:
+        type: boolean
+      communication_time:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      reached_percentage:
+        type: integer
+      repeated:
+        type: string
+      end_date:
+        type: string
+        format: date-time
+      is_active:
+        type: boolean
+      total_sent:
+        type: integer
+  CommunicationsDetail:
+    type: object
+    properties:
+      id:
+        type: string
+      channel:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        description: >-
+          status = 1 or 2 or 3. status = 1: draft. status = 2: scheduled. status
+          = 3: sent
+      cover_image:
+        type: string
+      segment_target:
+        $ref: '#/definitions/Segment'
+      manual_target:
+        type: string
+      all_target:
+        type: boolean
+      communication_time:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      content:
+        type: object
+        description: >
+          CONTENT is an object.
+
+          It's depend on CHANNEL TYPE.
+
+          If CHANNEL TYPE is 'pushnotif' -> CONTENT is { subject: string,
+          content: string, deep_link: string }.
+
+          If CHANNEL TYPE is 'email' -> CONTENT is { subject: string, from:
+          string, content: string }.
+
+          If CHANNEL TYPE is 'sms' -> CONTENT is { from: string, content: string
+          }.
+      subscribers:
+        type: array
+        items:
+          $ref: '#/definitions/Subscriber-CommunicationDetail'
+      total_failed:
+        type: integer
+  TargetList:
+    type: object
+    properties:
+      device:
+        type: object
+        properties:
+          ios:
+            type: string
+            default: "iOS"
+          android:
+            type: string
+            default: "Android"
+      gender:
+        type: object
+        properties:
+          male:
+            type: string
+            default: "Male"
+          female:
+            type: string
+            default: "Female"
+      country:
+        type: object
+        properties:
+          SG:
+            type: string
+            default: "Singapore"
+          VN:
+            type: string
+            default: "Vietnam"
+  SubscriberDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      address:
+        type: string
+      is_active:
+        type: boolean
+      created_at:
+        type: string
+      updated_at:
+        type: string
+      info:
+        type: object
+        properties:
+          gender:
+            type: string
+          date_of_birth:
+            type: string
+            format: date
+          country:
+            type: string
+          gps_latitude:
+            type: number
+          gps_longitude:
+            type: number
+  SubscriberList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/SubscriberDetail'
+  Subscriber-CommunicationDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+      email:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: integer
+      is_active:
+        type: string
+      created_at:
+        type: integer
+      phone:
+        type: string
+      updated_at:
+        type: integer
+      info:
+        type: object
+        properties:
+          gps_latitude:
+            type: integer
+          gps_longitude:
+            type: integer
+          gender:
+            type: string
+          date_of_birth:
+            type: string
+            format: date-time
+          country:
+            type: string
+      application_id:
+        type: integer
+      is_reached:
+        type: string
+  PlanList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            default:
+              type: boolean
+            available:
+              type: boolean
+            visible:
+              type: boolean
+            monthly_price:
+              type: integer
+            annual_price:
+              type: integer
+            max_mau:
+              type: integer
+            max_campaign:
+              type: integer
+            intelligent_delivery:
+              type: boolean
+  CurrentPlan:
+    type: object
+    properties:
+      plan:
+        type: integer
+      plan_name:
+        type: string
+      expire:
+        type: string
+        format: date
+      active:
+        type: boolean
+      subscription:
+        type: string
+      current_mau:
+        type: integer
+      max_mau:
+        type: integer
+      intelligent_delivery:
+        type: boolean
+      next_bill:
+        type: object
+        properties:
+          date:
+            type: string
+            format: date
+          total:
+            type: integer
+      is_cancelled:
+        type: boolean
+  BillingInfo:
+    type: object
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      address1:
+        type: string
+      address2:
+        type: string
+      postcode:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      card_brand:
+        type: string
+      card_last4:
+        type: string
+      card_exp_month:
+        type: string
+      card_exp_year:
+        type: string
+  BillingUpdate:
+    type: object
+    required:
+      - first_name
+      - last_name
+      - address1
+      - postcode
+      - city
+      - country
+      - card_number
+      - card_cvc
+      - card_exp_month
+      - card_exp_year
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      address1:
+        type: string
+      address2:
+        type: string
+      postcode:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      card_number:
+        type: string
+      card_cvc:
+        type: string
+      card_exp_month:
+        type: string
+      card_exp_year:
+        type: string
+  InvoiceList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            order_id:
+              type: string
+            user:
+              type: string
+            plan:
+              type: string
+            category:
+              type: string
+            created:
+              type: string
+            total:
+              type: string
+            buyer_name:
+              type: string
+            buyer_address1:
+              type: string
+            buyer_address2:
+              type: string
+            buyer_postcode:
+              type: string
+            buyer_city:
+              type: string
+            buyer_country:
+              type: string
+            buyer_card_brand:
+              type: string
+            buyer_card_last4:
+              type: string
+  Error:
+    type: object
+    required:
+      - status
+      - code
+      - message
+    properties:
+      status:
+        type: integer
+      code:
+        type: integer
+      message:
+        type: string
+      errors:
+        type: array
+        items:
+          type: object
+  ValidationFailed:
+    type: object
+    required:
+      - status
+      - code
+      - message
+    properties:
+      status:
+        type: integer
+        example: 422
+      code:
+        type: integer
+      message:
+        type: string
+        example: Validation failed
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            message:
+              type: string
+              example: This field is required.
+            field:
+              type: string
+              example: name
+  NotFoundError:
+    type: object
+    required:
+      - status
+      - message
+    properties:
+      status:
+        type: integer
+        example: 404
+      code:
+        type: integer
+      message:
+        type: string
+        example: Resource not found
+  BadRequest:
+    type: object
+    required:
+      - status
+      - message
+    properties:
+      status:
+        type: integer
+        example: 400
+      code:
+        type: integer
+      message:
+        type: string
+  AuthenticationError:
+    type: object
+    required:
+      - status
+      - message
+    properties:
+      status:
+        type: integer
+        example: 403
+      code:
+        type: integer
+      message:
+        type: string
+        example: Authentication credentials were not provided
+  Import:
+    type: object
+    properties:
+      success:
+        type: integer
+      failures:
+        type: integer
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            line:
+              type: integer
+            message:
+              type: string
+  UploadedFile:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            filename:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+  LocationData:
+    type: object
+    properties:
+      name:
+        type: string
+      gps_latitude:
+        type: number
+      gps_longitude:
+        type: number
+      radius:
+        type: integer
+  LocationDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      gps_latitude:
+        type: number
+      gps_longitude:
+        type: number
+      radius:
+        type: integer
+      updated_at:
+        type: string
+        format: date-time
+  LocationList:
+    type: object
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      previous:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/LocationDetail'
+  SmartSegment:
+    type: object
+    properties:
+      name:
+        type: string
+      data_type:
+        type: string
+        example: string/number/bool
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  SegmentNotFound:
+    type: object
+    properties:
+      status:
+        type: integer
+      code:
+        type: integer
+      message:
+        type: string
+  Organization:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      name:
+        type: string
+  NotFound:
+    type: object
+    properties:
+      status:
+        type: integer
+      code:
+        type: integer
+      message:
+        type: string
+  UserOrganization:
+    type: object
+    properties:
+      user:
+        type: integer
+        example: 1
+      organization:
+        type: integer
+        example: 1
+      is_active:
+        type: boolean
+      role:
+        type: integer
+        example: 1
+  Role:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: 1
+  CustomAttribute:
+    type: object
+    properties:
+      name:
+        type: string
+      data_type:
+        type: string
+        example: string/number/bool
+      code_name:
+        type: string
+      is_active:
+        type: boolean
+  CustomEvent:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+        example: false
