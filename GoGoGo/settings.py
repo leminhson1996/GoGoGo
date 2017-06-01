@@ -26,7 +26,7 @@ SECRET_KEY = '9)f&@qt%yn=1fjfs8*hnq7yso&!ii(__)temnkvbyofd2!d*5z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://gogogo-1996.herokuapp.com', 'http://localhost:8000']
+ALLOWED_HOSTS = ['gogogo-1996.herokuapp.com', 'localhost']
 
 
 # Application definition
