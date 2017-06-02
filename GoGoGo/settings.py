@@ -26,7 +26,7 @@ SECRET_KEY = '9)f&@qt%yn=1fjfs8*hnq7yso&!ii(__)temnkvbyofd2!d*5z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['gogogo-1996.herokuapp.com', '127.0.0.1']
+ALLOWED_HOSTS = ['gogogo-1996.herokuapp.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -39,13 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_swagger',
     'UserManager',
     'Place',
+    'django.contrib.postgres',
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-    ],
+    'DEFAULT_PERMISSION_CLASSES': [],
     'PAGE_SIZE': 10
 }
 
