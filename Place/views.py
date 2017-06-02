@@ -10,12 +10,14 @@ class PlaceViewSetModel(viewsets.ModelViewSet):
     ---
     list:
         Get all places
-        parameters:
-            - name: name
-              description: Place's name
-              required: true
-              type: string
-              paramType: query
+    create:
+        Create a place
+    retrieve:
+        Get detail of a place
+    destroy:
+        Delete a place
+    put:
+        Update a place
     """
 
     serializer_class = PlaceInfoSerializer
