@@ -1,5 +1,3 @@
-from django.contrib.gis.geos import GEOSGeometry
-
 
 def get_place_by_segment(queryset, **kwargs):
     for key, value in kwargs.items():
