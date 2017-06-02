@@ -26,7 +26,7 @@ SECRET_KEY = '9)f&@qt%yn=1fjfs8*hnq7yso&!ii(__)temnkvbyofd2!d*5z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['gogogo-1996.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['gogogo-1996.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -93,7 +93,6 @@ DATABASES = {
         'PORT': '5432'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
