@@ -12,6 +12,7 @@ class PlaceInformation(models.Model):
     longitude = models.FloatField()
     latitude = models.FloatField()
     image = models.CharField(max_length=500)
+    phone = models.CharField(max_length=20, blank=True)
     comments = JSONField(null=True)
 
     def __str__(self):
